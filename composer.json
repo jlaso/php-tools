@@ -3,7 +3,7 @@
     "type": "library",
     "description": "This project holds a collection of useful PHP classes grouped in components to be used in any PHP5.2 project.",
     "keywords": ["jaitec", "toolkit"],
-    "homepage": "git://github.com/jlaso/php-tools.git",
+    "homepage": "https://github.com/jlaso/php-tools.git",
     "version": "0.1.1",
     "license": "LGPLv3",
     "authors": [
