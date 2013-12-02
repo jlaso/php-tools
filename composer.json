@@ -1,8 +1,8 @@
 {
-    "name": "jaitec/php-tools",
+    "name": "jlaso/php-tools",
     "type": "library",
     "description": "This project holds a collection of useful PHP classes grouped in components to be used in any PHP5.2 project.",
-    "keywords": ["jaitec", "toolkit"],
+    "keywords": ["jlaso", "php", "toolkit"],
     "homepage": "https://github.com/jlaso/php-tools.git",
     "version": "0.1.1",
     "license": "LGPLv3",
