@@ -302,64 +302,102 @@ class DbTools
 
 }
 
-class HtmlTools {
+/**
+ * Class HtmlTools
+ *
+ * @author jlaso <wld1373@gmail.com>
+ * @revision 17.08.2014
+ */
+class HtmlTools
+{
     /**
+     * content of a html file until </head> label
+     * if specified load generic javascript plus $jq code
+     * to use put this at the first of each PHP file that generates html code:
+     *  <?php require_once 'php-tools.php'; ?>
+     *  <?php echo HtmlTools::headContent(); ?>
      *
      * @param string $jq
-     *
-     * contenido de la cabecera de cada archivo html hasta la etiqueta de cierre </head>
-     * si se especifica $jq se cargan los javascript genéricos más el código de $jq
-     * hay que poner esto al  principio de cada archivo php de este sitio web
-     *  <?php include 'includes/cargarConfig.php'; ?>
-     *  <?php include 'includes/funciones.php'; ?>
-     *  <?php echo headContent(); ?>
      */
-    public static function headContent($jq = null) {  // indicar en $jq si hay que cargar jquery
-        ?>
+    public static function headContent($jq = null) 
+    {
+        $server = _SERVER_;
+        
+        echo <<<EOD
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml" >
     <head>
-    <link rel="image_src" href="img/logo.gif" />
-    <meta property="og:description" content="mi página" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta property="og:title" content="titulo" />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="url" />
-    <meta property="og:image" content="logo.gif" />
-    <meta property="og:site_name" content="titulo" />
-    <meta name="Robots" content="all" />
-    <link rel="icon" href="favicon.ico" type="image/x-icon" />
-    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
-
-    <title>mi p&aacute;gina</title>
-
-    <link href="<?php echo _SERVER_ ?>css/estilos.css" rel="stylesheet" type="text/css" />
-    <!--[if IE]>
-    <link href="<?php echo _SERVER_ ?>css/ie.css" rel="stylesheet" type="text/css" />
-    <![endif]-->
-    <?php if (isset($jq)): ?>
-        <link media="screen" rel="stylesheet" href="<?php echo _SERVER_ ?>css/colorbox.css" />
-        <script type="text/javascript" src="js/jquery.min.js"></script>
-        <script type="text/javascript" src="<?php echo _SERVER_ ?>js/jquery.colorbox-min.js"></script>
-        <?php echo $jq ?>
-    <?php endif; ?>
-    </head>
-    <?php
+        <link rel="image_src" href="img/logo.gif" />
+        <meta property="og:description" content="my page" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta property="og:title" content="title" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="url" />
+        <meta property="og:image" content="logo.gif" />
+        <meta property="og:site_name" content="title" />
+        <meta name="Robots" content="all" />
+        <link rel="icon" href="favicon.ico" type="image/x-icon" />
+        <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+    
+        <title>my page</title>
+    
+        <link href="{$server}/css/styles.css" rel="stylesheet" type="text/css" />
+        <!--[if IE]>
+        <link href="{$server}/css/ie.css" rel="stylesheet" type="text/css" />
+        <![endif]-->
+EOD;
+        if(isset($jq)){
+            echo <<<EOD
+            <link media="screen" rel="stylesheet" href="{$server}/css/colorbox.css" />
+            <script type="text/javascript" src="{$server}/js/jquery.min.js"></script>
+            <script type="text/javascript" src="{$server}/js/jquery.colorbox-min.js"></script>
+EOD;
+        echo $jq;
+        }            
+        echo <<<EOD
+    </head>    
+EOD;
     }
-
-    public static function reloadJavascript($retorna = false){
+    
+    /**
+     * @param bool $return
+     * @return string
+     */
+    public static function reloadJavascript($return = false)
+    {
         $html = "<script type='text/javascript'>window.location.reload();</script>";
-        if ($retorna)  return $html; else print $html;
+        if ($return){
+            return $html;
+        }else{
+            print $html;
+        }
     }
-
-    public static function locationJavascript($url = "",$retorna = false){
-        if (!$url)  $url = $_REQUEST['PHP_SELF'];
+    
+    /**
+     * @param string $url
+     * @param bool $return
+     * @return string
+     */
+    public static function locationJavascript($url = "",$return = false)
+    {
+        if (!$url)  {
+            $url = $_REQUEST['PHP_SELF'];
+        }
         $html = "<script type='text/javascript'>window.location.href='{$url}';</script>";
-        if ($retorna)  return $html; else print $html;
+        if ($return) {
+            return $html;
+        } else {
+            print $html;
+        }
     }
-
-    public static function genSelectFromArray ( array $opcs = null ) {
-        $opcsDefault = array (
+    
+    /**
+     * @param array $opts
+     * @return string
+     */
+    public static function genSelectFromArray ( $opts = array() )
+    {
+        $defaultOptions = array (
             "selected"=> "",
             "name"    => "",
             "id"      => "",
@@ -368,74 +406,98 @@ class HtmlTools {
             "size"    => 1,
             "data"    => array(),
             "fldkey"  => "id",
-            "fldname" => "nombre",
+            "fldname" => "name",
             "select"  => true
         );
-        $opciones = array_merge($opcsDefault, (array) $opcs);
-        
-        $id       = ($opciones['id'])? "id='".$opciones['id']."'" : "";
-        $name     = ($opciones['name'])? "name='".$opciones['name']."'" : "";
-        $multiple = ($opciones['multiple'])? "MULTIPLE" : "";
-        $optgroup = ($opciones['optgroup'])? "<optgroup label='".$opciones['optgroup']."'>" : "";
-        $selected = $opciones['selected'];
-        $size     = "size='".intval($opciones['size'])."'";
-        $fldkey   = $opciones["fldkey"];
-        $fldname  = $opciones["fldname"];
-        
+        $options = array_merge($defaultOptions, $opts);
+    
+        $id       = ($options['id'])? "id='".$options['id']."'" : "";
+        $name     = ($options['name'])? "name='".$options['name']."'" : "";
+        $multiple = ($options['multiple'])? "MULTIPLE" : "";
+        $optgroup = ($options['optgroup'])? "<optgroup label='".$options['optgroup']."'>" : "";
+        $selected = $options['selected'];
+        $size     = "size='".intval($options['size'])."'";
+        $fldkey   = $options["fldkey"];
+        $fldname  = $options["fldname"];
+    
         // listado de registros
-        $U = $opciones["data"];
-
-        if ($opciones['select']) 
+        $U = $options["data"];
+    
+        if ($options['select'])
             $html  = "<SELECT {$id} {$name} {$multiple} {$size} >";
         $html .= $optgroup;
         foreach ( $U as $elem ) {
-           $desc  = $elem[$fldname]; 
-           $key   = $elem[$fldkey];
-           $html .= "<OPTION VALUE='{$key}'".(($desc == $selected)? " SELECTED >" : ">").$desc."</OPTION>";
-        }        
+            $desc  = $elem[$fldname];
+            $key   = $elem[$fldkey];
+            $html .= "<OPTION VALUE='{$key}'".(($desc == $selected)? " SELECTED >" : ">").$desc."</OPTION>";
+        }
         $html .= ($optgroup)? "</optgroup>" : "";
-        if ($opciones['select']) 
+        if ($options['select'])
             $html .= "</SELECT>";
-        
-        return $html;                       
+    
+        return $html;
     }
     
-    public static function plantilla ( $archivo, array $opcs = null ) {
-        if ($archivo) {
-            $file = file_get_contents($archivo);
-            if ($opcs) {
+    /**
+     * @param string $fileName
+     * @param array $opts
+     * @return mixed|string
+     */
+    public static function template($fileName, $opts = array())
+    {
+        $result = "";
+        if ($fileName) {
+            $file = file_get_contents($fileName);
+            if ($opts) {
                 $search = array();
                 $replace= array();
-                foreach ($opcs as $key=>$value) {
+                foreach ($opts as $key=>$value) {
                     $search[]=$key;
                     $replace[]=$value;
                 }
                 $result = str_replace($search, $replace, $file);
             }
-            return $result;
-        }else{
-            return "";
         }
+    
+        return $result;
     }
     
-    public static function plural ($dato){
-        $minusc = strtolower($dato);
-        if (substr($minus, -1) != "s") {
-            if (preg_match("/.*(a|e|i|o|u)s$/", $minusc)) {
-                return $dato."s";
+    /**
+     * spanish pluralization of a word
+     *
+     * @param string $data
+     * @return string
+     */
+    public static function plural($data)
+    {
+        $lowercase = strtolower($data);
+        if (substr($lowercase, -1) != "s") {
+            if (preg_match("/.*(a|e|i|o|u)s$/", $lowercase)) {
+                return $data."s";
             }else {
-                return $dato."es";
+                return $data."es";
             }
-        }else return $dato."os";
+        }else return $data."os";
     }
     
-    public static function capitalizar($tabla){
-        return strtoupper($tabla[0]).strtolower(substr($tabla, 1));
+    /**
+     * @param string $data
+     * @return string
+     */
+    public static function capitalize($data)
+    {
+        return strtoupper($data[0]).strtolower(substr($data, 1));
     }
     
-    // el array tiene que ser bidimensional, primera dimensión numérica, segunda
-    // asociativa
-    public static function genTableFromMixed (array $arr, $id=null){
+    /**
+     * $arr must to have two dimensions: first numeric and second associative
+     *
+     * @param array $arr
+     * @param null $id
+     * @return string
+     */
+    public static function genTableFromMixed ($arr = array(), $id = null)
+    {
         $id = (isset($id)) ? "id='{$id}'" : "";
         $html = "<table {$id}>\n\t<thead>\n";
         foreach ($arr[0] as $key=>$value) {
@@ -450,421 +512,512 @@ class HtmlTools {
             $html .= "\t</tr>\n";
         }
         $html .= "</table>\n";
+    
         return $html;
     }
-    
+
 }
 
-class SesionTools {
+
+/**
+ * Class SessionTools
+ */
+class SessionTools 
+{
     /**
      *
+     * check if user is loged
+     * 
      * @global mysql $db
-     *
-     * comprueba si el usuario está logado
-     * esta función no está 100% testada
      */
-    function estaLogado() {
-        session_start();
+    function isLoged() 
+    {
+        @session_start();
 
         global $db;
 
-        // comprobar user agent
+        // check user agent
         if (isset($_SESSION['HTTP_USER_AGENT'])) {
             if ($_SESSION['HTTP_USER_AGENT'] != md5($_SERVER['HTTP_USER_AGENT'])) {
-                logout();
+                self::logout();
                 exit;
             }
         }
 
-        // clave de sesión
-
         /* If session not set, check for cookies set by Remember me */
-        if (!isset($_SESSION['usr_email']) && !isset($_SESSION['usr_fechaalta']) )
+        if (!isset($_SESSION['usr_email']) && !isset($_SESSION['created_at']) )
         {
-                if(isset($_COOKIE['usr_email']) && isset($_COOKIE['usr_fechaalta'])){
+                if(isset($_COOKIE['usr_email']) && isset($_COOKIE['created_at'])){
                 /* we double check cookie expiry time against stored in database */
-                $cookie_usr_email  = filtrarDatos($_COOKIE['usr_email']);
-                $q_clavesesion = mysql_query("select `clavesesion`,`ultimoacceso` from `users` where `email` ='$cookie_user_email'")
+                $cookie_user_email  = DbTools::filterData($_COOKIE['usr_email']);
+                $sessionKeyQry = mysql_query("select `session_key`,`last_access` from `users` where `email` ='{$cookie_user_email}'")
                     or die(mysql_error());
-                list($clavesesion,$ultimoacceso) = mysql_fetch_row($q_clavesesion);
-                // comprobar si la cookie ha expirado
-                if( (time() - time($ultimoacceso)) > 60*60*24*APP_COOKIE_EXPIRA) {
-                        logout();
+                list($sessionkey,$lastaccess) = mysql_fetch_row($sessionKeyQry);
+                // check if cookie has expired
+                if( (time() - time($lastaccess)) > 60*60*24*APP_COOKIE_EXPIRA) {
+                    self::logout();
                 }
 
                 /* Security check with untrusted cookies - dont trust value stored in cookie.
                 /* We also do authentication check of the `ckey` stored in cookie matches that stored in database during login*/
 
-                 if( !empty($clavesesion) && esEmail($_COOKIE['usr_email']) && $_COOKIE['usr_clavesesion'] == sha1($clavesesion)  ) {
+                 if( !empty($sessionkey) && MyTools::isEmail($_COOKIE['usr_email']) && $_COOKIE['usr_session_key'] == sha1($sessionkey)  ) {
                           session_regenerate_id(); //against session fixation attacks.
 
                           $_SESSION['usr_email'] = $_COOKIE['usr_email'];
-                          $_SESSION['usr_fechaalta'] = $_COOKIE['usr_fechaalta'];
-                          $_SESSION['usr_administrador'] = $_COOKIE['usr_administrador'];
+                          $_SESSION['created_at'] = $_COOKIE['created_at'];
+                          $_SESSION['usr_administrator'] = $_COOKIE['usr_administrator'];
                           $_SESSION['HTTP_USER_AGENT'] = md5($_SERVER['HTTP_USER_AGENT']);
 
                    } else {
-                          logout();
+                          self::logout();
                    }
 
           } else {
-              // volvemos a la página de login
-              header("Location: login.php");
+              // return to homepage
+              header("Location: /");
               exit();
           }
         }
     }
 
-/**
- *
- * @global array $get
- * @global array $data
- * @param string $postAcc ,  valor de la variable POST accion
- * @return boolean
- *
- * pasa todos los $_POST a $data y todos los $_GET a  $get  y si se le pasa
- * una acción en $postAcc devuelve TRUE si $_POST["accion"]==$postAcc
- */
-function getYpost ($postAcc = null){
-    global $get;
-    global $data;
-
-    foreach($_GET as $key => $value) {
-	$get[$key] = filtrarDatos($value);
-    }
-
-    if (isset($_POST['accion']) && ($_POST['accion']==$postAcc)){
-        foreach($_POST as $key => $value) {
-                   $data[$key] = filtrarDatos($value);
-                }
-        return TRUE;
-    }else {
-        return FALSE;
-    }
-}
-
-
-}
-
-class MyTools {
-
-/**
- *
- * @param string $url
- * @return string
- *
- * devuelve una cadena en la que se han sustituido los espacios por guiones bajos
- *
- */
-public static function EncodeURL($url) {
-    $new = strtolower(ereg_replace(' ','_',$url));
-    return($new);
-}
-
-/**
- *
- * @param string $url
- * @return string
- *
- * devuelve una cadena en la que se restablecen los guiones bajos a espacios
- */
-public static function DecodeURL($url){
-    $new = ucwords(ereg_replace('_',' ',$url));
-    return($new);
-}
-
-/**
- *
- * @param string $str
- * @param int $len
- * @return string
- *
- * si la cadena pasada como argumento excede de la longitud, se corta añadiendo ...
- */
-public static function puntosSuspensivos($str, $len) {
-    if (strlen($str) < $len)
-        return $str;
-
-    $str = substr($str,0,$len);
-    if ($spc_pos == strrpos($str," "))
-            $str = substr($str,0,$spc_pos);
-
-    return $str . "...";
-}	
-
-/**
- *
- * @param string $email
- * @return boolean
- *
- * comprueba mediante expresiones regulares si una cadena  parece un email
- */
-public static function esEmail($email){
-    return preg_match('/^\S+@[\w\d.-]{2,}\.[\w]{2,6}$/iU', $email) ? TRUE : FALSE;
-}
-
-/**
- *
- * @param string $id
- * @return boolean
- *
- * comprueba si la cadena pasada parece un ID
- */
-public static function esID($id){
-    return preg_match('/^[a-z\d_]{5,20}$/i', $id) ? TRUE : FALSE;
- }	
-
-/**
-*
-* @param string $url
-* @return boolean
-*
-* comprueba si la cadena pasada 'parece' una URL
-*/
-public static function esURL($url) {
-    return preg_match('/^(http|https|ftp):\/\/([A-Z0-9][A-Z0-9_-]*(?:\.[A-Z0-9][A-Z0-9_-]*)+):?(\d+)?\/?/i', $url) ? TRUE : FALSE;
-} 
-
-/**
- *
- * @param string $x
- * @param string $y
- * @return boolean
- *
- * comprueba si la contraseña y repita contraseña coinciden y son mayores de 4
- */
-public static function checkPwd($x,$y) {
-    if (empty($x) || empty($y) )            return false;
-    if (strlen($x) < 4 || strlen($y) < 4)   return false;
-    if (strcmp($x,$y) != 0)                 return false;
-    return true;
-}
-
-/**
- *
- * @param int $length
- * @return string
- *
- * genera una contraseña aleatoria de la longitud indicada (por defecto 7)
- *
- */
-public static function genPassword($length = 7, $repeticiones = false){
-  $password = "";
-  $possible = "0123456789bBcCdDfFgGhHjJkKmMnNpPqQrRsStTvVwWxXyYzZ$#?+"; //sin vocales para evitar palabras que suenen
-
-  if (!$repeticiones && ($length>count_chars($posible))) return -1;
-
-  $i = 0; 
+    /**
+     *
+     * @global array $get
+     * @global array $data
+     * @param string $postAcc ,  valor de la variable POST accion
+     * @return boolean
+     *
+     * pasa todos los $_POST a $data y todos los $_GET a  $get  y si se le pasa
+     * una acción en $postAcc devuelve TRUE si $_POST["accion"]==$postAcc
+     */
+    function getAndPost ($postAcc = null)
+    {
+        global $get;
+        global $data;
     
-  while ($i < $length) { 
-    $char = substr($possible, mt_rand(0, strlen($possible)-1), 1);     
-    if ($repeticiones || !strstr($password, $char)) {
-      $password .= $char;
-      $i++;
+        foreach($_GET as $key => $value) {
+            $get[$key] = DbTools::filterData($value);
+        }
+    
+        if (isset($_POST['accion']) && ($_POST['accion']==$postAcc)){
+            foreach($_POST as $key => $value) {
+               $data[$key] = DbTools::filterData($value);
+            }
+            return TRUE;
+        }else {
+            return FALSE;
+        }
     }
-  }
 
-  return $password;
-}
-
-/**
- *
- * @param int $length
- * @return string
- *
- * genera una key aleatoria de la longitud indicada (por defecto 7)
- * a diferencia del password, la key puede contener vocales
- */
-public static function genKey($length = 7, $repeticiones = false){
-  $password = "";
-  $possible = "0123456789abcdefghijkmnopqrstuvwxyz";
-
-  if (!$repeticiones && ($length>count_chars($posible))) return -1;
-
-  $i = 0; 
-  while ($i < $length) { 
-    $char = substr($possible, mt_rand(0, strlen($possible)-1), 1);
-    if ($repeticiones || !strstr($password, $char)) {
-      $password .= $char;
-      $i++;
+    public static function logout()
+    {
+        unset($_SESSION['usr_email']);
+        // return to homepage
+        header("Location: /");
+        exit();
     }
-  }
-  return $password;
+
 }
 
-/**
- *
- * @param string $email
- * @return string
- *
- * sustituye la arroba de un email por un guión bajo
- *
- */
-public static function slugEmail ($email) {
-    return str_replace("@", "_", $email);
-}
+class MyTools 
+{
 
-/**
- *
- * @param string $email
- * @return string
- *
- * convierte el guión bajo en una arroba
- */
-public static function deslugEmail ($email) {
-    return str_replace("_", "@", $email);
-}
+    /**
+     *
+     * @param string $url
+     * @return string
+     *
+     * devuelve una cadena en la que se han sustituido los espacios por guiones bajos
+     *
+     */
+    public static function EncodeURL($url) {
+        $new = strtolower(ereg_replace(' ','_',$url));
+        return($new);
+    }
+    
+    /**
+     *
+     * @param string $url
+     * @return string
+     *
+     * devuelve una cadena en la que se restablecen los guiones bajos a espacios
+     */
+    public static function DecodeURL($url){
+        $new = ucwords(ereg_replace('_',' ',$url));
+        return($new);
+    }
+    
+    /**
+     *
+     * @param string $str
+     * @param int $len
+     * @return string
+     *
+     * si la cadena pasada como argumento excede de la longitud, se corta añadiendo ...
+     */
+    public static function puntosSuspensivos($str, $len) {
+        if (strlen($str) < $len)
+            return $str;
+    
+        $str = substr($str,0,$len);
+        if ($spc_pos == strrpos($str," "))
+                $str = substr($str,0,$spc_pos);
+    
+        return $str . "...";
+    }	
+    
+    /**
+     *
+     * @param string $email
+     * @return boolean
+     *
+     * comprueba mediante expresiones regulares si una cadena  parece un email
+     */
+    public static function isEmail($email)
+    {
+        return preg_match('/^\S+@[\w\d.-]{2,}\.[\w]{2,6}$/iU', $email) ? TRUE : FALSE;
+    }
+    
+    /**
+     *
+     * @param string $id
+     * @return boolean
+     *
+     * comprueba si la cadena pasada parece un ID
+     */
+    public static function esID($id){
+        return preg_match('/^[a-z\d_]{5,20}$/i', $id) ? TRUE : FALSE;
+     }	
+    
+    /**
+    *
+    * @param string $url
+    * @return boolean
+    *
+    * comprueba si la cadena pasada 'parece' una URL
+    */
+    public static function esURL($url) {
+        return preg_match('/^(http|https|ftp):\/\/([A-Z0-9][A-Z0-9_-]*(?:\.[A-Z0-9][A-Z0-9_-]*)+):?(\d+)?\/?/i', $url) ? TRUE : FALSE;
+    } 
+    
+    /**
+     *
+     * @param string $x
+     * @param string $y
+     * @return boolean
+     *
+     * comprueba si la contraseña y repita contraseña coinciden y son mayores de 4
+     */
+    public static function checkPwd($x,$y) {
+        if (empty($x) || empty($y) )            return false;
+        if (strlen($x) < 4 || strlen($y) < 4)   return false;
+        if (strcmp($x,$y) != 0)                 return false;
+        return true;
+    }
+    
+    /**
+     *
+     * @param int $length
+     * @return string
+     *
+     * genera una contraseña aleatoria de la longitud indicada (por defecto 7)
+     *
+     */
+    public static function genPassword($length = 7, $repeticiones = false){
+      $password = "";
+      $possible = "0123456789bBcCdDfFgGhHjJkKmMnNpPqQrRsStTvVwWxXyYzZ$#?+"; //sin vocales para evitar palabras que suenen
+    
+      if (!$repeticiones && ($length>count_chars($posible))) return -1;
+    
+      $i = 0; 
+        
+      while ($i < $length) { 
+        $char = substr($possible, mt_rand(0, strlen($possible)-1), 1);     
+        if ($repeticiones || !strstr($password, $char)) {
+          $password .= $char;
+          $i++;
+        }
+      }
+    
+      return $password;
+    }
+    
+    /**
+     *
+     * @param int $length
+     * @return string
+     *
+     * genera una key aleatoria de la longitud indicada (por defecto 7)
+     * a diferencia del password, la key puede contener vocales
+     */
+    public static function genKey($length = 7, $repeticiones = false){
+      $password = "";
+      $possible = "0123456789abcdefghijkmnopqrstuvwxyz";
+    
+      if (!$repeticiones && ($length>count_chars($posible))) return -1;
+    
+      $i = 0; 
+      while ($i < $length) { 
+        $char = substr($possible, mt_rand(0, strlen($possible)-1), 1);
+        if ($repeticiones || !strstr($password, $char)) {
+          $password .= $char;
+          $i++;
+        }
+      }
+      return $password;
+    }
+    
+    /**
+     *
+     * @param string $email
+     * @return string
+     *
+     * sustituye la arroba de un email por un guión bajo
+     *
+     */
+    public static function slugEmail ($email) {
+        return str_replace("@", "_", $email);
+    }
+    
+    /**
+     *
+     * @param string $email
+     * @return string
+     *
+     * convierte el guión bajo en una arroba
+     */
+    public static function deslugEmail ($email) {
+        return str_replace("_", "@", $email);
+    }
 
 
 }
 
 class DirTools {
-/**
- *
- * @param string $dirname
- * @param boolean $solofotos
- * @return array
- *
- * inspecciona el directorio pasado como argumento y almacena todos sus archivos
- * (o sólo las fotos) en un array que luego se devuelve
- *
- */
-public static function dirToArray ($dirname, $solofotos=1) {
-    $a = array();
-    $directorio=opendir($dirname);
-    while ($archivo = readdir($directorio)) {
-       if (!(($archivo=='.') || ($archivo=='..'))) {
-           if (@filetype($dirname."/".$archivo)=="file") {
-           if ($solofotos) {
-              $ext=extensionArchivo($archivo);
-              if (in_array($ext, array('jpg','gif','png')))
-                 $a[]=$archivo;
-           }else{
-              $a[]=$archivo;               
+    /**
+     *
+     * @param string $dirname
+     * @param boolean $solofotos
+     * @return array
+     *
+     * inspecciona el directorio pasado como argumento y almacena todos sus archivos
+     * (o sólo las fotos) en un array que luego se devuelve
+     *
+     */
+    public static function dirToArray ($dirname, $solofotos=1) {
+        $a = array();
+        $directorio=opendir($dirname);
+        while ($archivo = readdir($directorio)) {
+           if (!(($archivo=='.') || ($archivo=='..'))) {
+               if (@filetype($dirname."/".$archivo)=="file") {
+               if ($solofotos) {
+                  $ext=extensionArchivo($archivo);
+                  if (in_array($ext, array('jpg','gif','png')))
+                     $a[]=$archivo;
+               }else{
+                  $a[]=$archivo;               
+               }
            }
-       }
+        }
+        }
+        closedir($directorio);
+        sort($a);
+        return $a;
     }
+    
+    /**
+     *
+     * @param string $base
+     * @param string $opcion1
+     * @param string $opcion2
+     * @return array
+     *
+     * devuelve un array que contiene como primer elemento la base + opcion1 y
+     * como segundo la base + opcion2
+     * este útil se gasta para las carpetas base y la de miniaturas
+     *
+     */
+    public static function opcionBase ( $base, $opcion1, $opcion2 ){
+        return array ($base.$opcion1, $base.$opcion2);
     }
-    closedir($directorio);
-    sort($a);
-    return $a;
+    
+    
+    /**
+     *
+     * @param array $a
+     * @return string
+     *
+     * funciona como array_rand($a); devuelve un elemento del array al azar
+     * utilizado para elegir una foto de un directorio al azar para presentarla
+     *
+     */
+    public static function randomElemArray($a) {
+        $elem = rand(0, sizeof($a)-1);
+        return $a[$elem];
+    }
+
 }
+
 
 /**
- *
- * @param string $base
- * @param string $opcion1
- * @param string $opcion2
- * @return array
- *
- * devuelve un array que contiene como primer elemento la base + opcion1 y
- * como segundo la base + opcion2
- * este útil se gasta para las carpetas base y la de miniaturas
- *
+ * Class Calendar
  */
-public static function opcionBase ( $base, $opcion1, $opcion2 ){
-    return array ($base.$opcion1, $base.$opcion2);
-}
 
+class Calendar 
+{
 
-/**
- *
- * @param array $a
- * @return string
- *
- * funciona como array_rand($a); devuelve un elemento del array al azar
- * utilizado para elegir una foto de un directorio al azar para presentarla
- *
- */
-public static function randomElemArray($a) {
-    $elem = rand(0, sizeof($a)-1);
-    return $a[$elem];
-}
-
-}
-
-
-//*********************** calendario
-
-class Calendar {
-
-   private $dia;
-   private $mes;
-   private $anyo;
-   private $meses;
+   private $day;
+   private $month;
+   private $year;
+   private $monthes;
    private $myselfphp;
 
-   public function __construct($myself,$anyo=0,$mes=0,$dia=0){
-       $this->meses = $this->meses();
+   public function __construct($myself,$year=0,$month=0,$day=0){
+       $this->months = $this->months();
        $this->myselfphp = (empty($myself))?$_SERVER['PHP_SELF']:$myself;
-       $this->anyo = ($anyo)?intval($anyo):date("Y");
-       $this->mes  = ($mes)?intval($mes):date("m");
-       $this->dia  = ($dia)?intval($dia):date("d");
+       $this->year = ($year)?intval($year):date("Y");
+       $this->month  = ($month)?intval($month):date("m");
+       $this->day  = ($day)?intval($day):date("d");
    }
 
-   public function setMes($mes=0)   { $this->mes  = ($mes)?$mes:date("m"); }
-   public function getMes()         { return $this->mes; }
-   public function setAnyo($anyo=0) { $this->anyo = ($anyo)?$anyo:date("Y");}
-   public function getAnyo()        { return $this->anyo; }
-   public function setDia($dia=0)   { $this->dia  = ($dia)?intval($dia):date("d");}
-   public function getDia()         { return $this->dia;}
-   
-   public function getGetJsClause($deltaMes=0,$deltaAnyo=0,$print = true) {
-       $anyo = $deltaAnyo + $this->anyo;
-       $mes  = $deltaMes  + $this->mes;
-       if ($mes<1) {
-           $mes = 12;
-           $anyo--;
+   public function setMonth($month=0)   { $this->month  = ($month)?$month:date("m"); }
+   public function getMonth()         { return $this->month; }
+   public function setYear($year=0) { $this->year = ($year)?$year:date("Y");}
+   public function getYear()        { return $this->year; }
+
+    /**
+     * @param int $day
+     */
+    public function setDia($day=0)
+    {
+        $this->day = ($day)?intval($day):date("d");
+    }
+
+    /**
+     * @return int
+     */
+     public function getDia()
+     {
+         return $this->day;
+     }
+
+    /**
+     * @param int $deltaMonth
+     * @param int $deltaYear
+     * @param bool $print
+     * @return string
+     */
+    public function getGetJsClause($deltaMonth=0,$deltaYear=0,$print = true)
+   {
+       $year = $deltaYear + $this->year;
+       $month  = $deltaMonth  + $this->month;
+       if ($month<1) {
+           $month = 12;
+           $year--;
        }
-       if ($mes>12) {
-           $mes = 1;
-           $anyo++;
+       if ($month>12) {
+           $month = 1;
+           $year++;
        }
-       //if ($deltaMes || $deltaAnyo) $result .= '?mes='.$mes.'&anyo='.$anyo;
-       $result = "getCalendar( {$this->dia},{$mes},{$anyo});";
+       //if ($deltaMonth || $deltaYear) $result .= '?month='.$month.'&year='.$year;
+       $result = "getCalendar( {$this->day},{$month},{$year});";
        if ($print) print $result; else    return  $result;
    }
 
-   public function getGetJsClause2($mes,$anyo) {
-       if ($mes===0) $mes = $this->getMes();
-       if ($anyo===0) $anyo=$this->getAnyo();
-       $result = "getCalendar( 1,{$mes},{$anyo});";
+   public function getGetJsClause2($month,$year) {
+       if ($month===0) $month = $this->getMonth();
+       if ($year===0) $year=$this->getYear();
+       $result = "getCalendar( 1,{$month},{$year});";
        return  $result;
    }
 
-   public function getAsAAAA_MM_DD($dia=-1){ 
-       if ($dia===0) return "";
-       if ($dia===-1) $dia = $this->dia;
-       return sprintf("%04d-%02d-%02d",$this->anyo,$this->mes,$dia);        
-   }
-   
-   public function getAsAAAAMMDD($dia=-1){ 
-       if ($dia===0) return "";
-       if ($dia===-1) $dia = $this->dia;
-       return sprintf("%04d%02d%02d",$this->anyo,$this->mes,$dia);        
+    /**
+     * @param int $day
+     * @return string
+     */
+     public function getAsYYYY_MM_DD($day=-1)
+     { 
+         if ($day===0) {
+             return "";
+         }
+         if ($day===-1) {
+             $day = $this->day;
+         }
+         
+         return sprintf("%04d-%02d-%02d",$this->year,$this->month,$day);        
+     }
+
+    /**
+     * @param $day
+     * @return string
+     */
+    public function getAsYYYYMMDD($day=-1)
+   { 
+       if ($day===0) return "";
+       if ($day===-1) $day = $this->day;
+       return sprintf("%04d%02d%02d",$this->year,$this->month,$day);        
    }   
    
-   public function getAsDate($dd=0) { return date("Y-m-d",  mktime(0, 0, 0, $this->mes, ($dd)?$dd:$this->dia , $this->anyo)); }
+   public function getAsDate($dd=0) { return date("Y-m-d",  mktime(0, 0, 0, $this->month, ($dd)?$dd:$this->day , $this->year)); }
 
-   public function meses(){
-       $r = array("",  // primero en blanco para empezar en el índice 1
-                  "Enero"  ,"Febrero"  ,"Marzo",
-                  "Abril"  ,"Mayo"     ,"Junio",
-                  "Julio"  ,"Agosto"   ,"Setiembre",
-                  "Octubre","Noviembre","Diciembre"
-                 );
+    /**
+     * @param string $lang
+     * @return array
+     */
+    public function months( $lang = "es")
+   {
+       switch($lang){
+           case "es":
+               $r = array(
+                   "", // first blank to start with index 1
+                   "Enero",
+                   "Febrero",
+                   "Marzo",
+                   "Abril",
+                   "Mayo",
+                   "Junio",
+                   "Julio",
+                   "Agosto",
+                   "Setiembre",
+                   "Octubre",
+                   "Noviembre",
+                   "Diciembre"
+               );
+               break;
+           
+           case "en":
+           default:
+               $r = array(
+                   "", // first blank to start with index 1
+                   "January",
+                   "February",
+                   "Mar",
+                   "April",
+                   "May",
+                   "Juny",
+                   "July",
+                   "August",
+                   "Sepitember",
+                   "October",
+                   "November",
+                   "December"
+               );
+               break;
+       }
        return $r;
    }
 
-   /*
-    * para generar el selector de mes
+   /**
+    * to generate month select
     */
-   public function selectMes(){
-       $html = "<select id='mes' onchange='".$this->getGetJsClause2( 'this.value', 0 )."'>";
+   public function selectMonth()
+   {
+       $html = "<select id='month' onchange='".$this->getGetJsClause2( 'this.value', 0 )."'>";
        for ($i=1;$i<13;$i++){
            $html .=  "<option name='{$i}' value='{$i}'";
-           if ($this->mes==$i) $html.=" selected ";
-           $html .= ">".$this->meses[$i]."</option>";
+           if ($this->month==$i) $html.=" selected ";
+           $html .= ">".$this->months[$i]."</option>";
        }
        $html .= "</select>";
        return $html;
@@ -873,64 +1026,106 @@ class Calendar {
    /*
     * para generar el selector de año
     */
-   public function selectAnyo($desde=1970,$hasta=2100){
-       $html = "<select id='anyo' onchange='".$this->getGetJsClause2( 0, 'this.value' )."'>";
-       for ($i=$desde;$i<=$hasta;$i++){
+   public function selectYear($from=1970, $to=2100)
+   {
+       $html = "<select id='year' onchange='".$this->getGetJsClause2( 0, 'this.value' )."'>";
+       for ($i=$from;$i<=$to;$i++){
            $html .=  "<option name='{$i}' value='{$i}'";
-           if ($this->anyo==$i) $html.=" selected ";
+           if ($this->year==$i) $html.=" selected ";
            $html .= ">".$i."</option>";
        }
        $html .= "</select>";
        return $html;
    }
-   public function ajustFechaRequest(){
-       $this->anyo = (isset($_REQUEST['anyo']) && intval($_REQUEST['anyo'])) ? intval($_REQUEST['anyo']) : date("Y");   // año con 4 cifras
-       $this->mes  = (isset($_REQUEST['mes'])  && intval($_REQUEST['mes'] )) ? intval($_REQUEST['mes'] ) : date("m");
-       /*if ($this->mes<1) {   // así hago más sencilla la llamada, mes=0 => año anterior, mes=13 => año siguiente
-           $this->mes = 12;
-           $this->anyo--;
+
+    /**
+     * 
+     */
+    public function adjustRequestDate()
+    {
+       $this->year = (isset($_REQUEST['year']) && intval($_REQUEST['year'])) ? intval($_REQUEST['year']) : date("Y");   
+       $this->month  = (isset($_REQUEST['month'])  && intval($_REQUEST['month'] )) ? intval($_REQUEST['month'] ) : date("m");
+       /*if ($this->month<1) {  
+           $this->month = 12;
+           $this->year--;
        }
-       if ($this->mes>12) {
-           $this->mes = 1;
-           $this->anyo++;
+       if ($this->month>12) {
+           $this->month = 1;
+           $this->year++;
        }*/
-       $this->dia  = (isset($_REQUEST["dia"])  && intval($_REQUEST['dia'])) ? intval($_REQUEST["dia"])  :  date("d");
-   }
+       $this->day  = (isset($_REQUEST["day"])  && intval($_REQUEST['day'])) ? intval($_REQUEST["day"])  :  date("d");
+    }
 
-   public function primerDia(){
-       $dias = array(7,1,2,3,4,5,6);  // orden de los días (1º Domingo)
-       return $dias[date("w", mktime(0, 0, 0, $this->mes, 1, $this->anyo)) ];
-   }
+    /**
+     * return first day
+     * 
+     * @return mixed
+     */
+     public function firstDay()
+     {
+         $days = array(7,1,2,3,4,5,6);  // day sort (1st is sunday)
+         
+         return $days[date("w", mktime(0, 0, 0, $this->month, 1, $this->year)) ];
+     }
 
-   public function ultimoDia(){
-       return intval( date("t",mktime(0, 0, 0, $this->mes, 1, $this->anyo)) );
-   }
+    /**
+     * return last day of month
+     * 
+     * @return int
+     */
+    public function lastDay()
+    {
+        return intval( date("t",mktime(0, 0, 0, $this->month, 1, $this->year)) );
+    }
    
-   // devuelve el número de día del lunes de esa semana
-   public function dia_lunes_semana () {      
-    // ojo, primer día 0=domingo
-    $diasemana = date("w", mktime(0, 0, 0, $this->mes, $this->dia, $this->anyo));
-    return $dia - $diasemana + 1;       
-   }
-   
-   public static function fromDateSpanish($str,$date=false){
-       if (!$str) return '';
+    /**
+     * return number of day of the monday in this week
+     * 
+     * @return int
+     */
+    public function mondayWeek() 
+    {      
+        // 0=sunday
+        $dayofweek = date("w", mktime(0, 0, 0, $this->month, $this->day, $this->year));
+        return $this->day - $dayofweek + 1;       
+    }
+
+    /**
+     * @param string $str
+     * @param bool $date
+     * @return int|string
+     */
+    public static function fromSpanishDate($str, $date=false)
+   {
+       if (!$str) {
+           return '';
+       }
        // dd/mm/YYYY HH:MM
-       $dia = intval(substr($str,0,2));
-       $mes = intval(substr($str,3,2)); 
-       $anyo= intval(substr($str,6,4)); 
-       $hora= intval(substr($str,11,2)); 
-       $min = intval(substr($str,14,2)); 
-       $ret = mktime($hora, $min, 0, $mes, $dia, $anyo);
-       if ($date) return $ret;
-             else return date("Y-m-d H:i", $ret);
+       $day   = intval(substr($str, 0, 2));
+       $month = intval(substr($str, 3, 2));
+       $year  = intval(substr($str, 6, 4));
+       $hour  = intval(substr($str, 11, 2));
+       $min   = intval(substr($str, 14, 2));
+       $ret   = mktime($hour, $min, 0, $month, $day, $year);
+       if ($date) {
+           return $ret;
+       }else{
+           return date("Y-m-d H:i", $ret);
+       }
    }
-   
-   public static function fromDateEnglish($str,$date=false){
-       $fecha = DateTime::createFromFormat("Y-m-d H:i:s", $str);
-       if (!$fecha) return null;
+
+    /**
+     * @param string $str
+     * @return null|string
+     */
+    public static function fromEnglishDate($str)
+   {
+       $date = DateTime::createFromFormat("Y-m-d H:i:s", $str);
+       if (!$date) {
+           return null;
+       }
        try {
-           $ret = $fecha->format("d/m/Y H:i");
+           $ret = $date->format("d/m/Y H:i");
        }catch(Exception $e){
            print "Error: ".$e->getMessage();
            $ret = null;
@@ -939,19 +1134,36 @@ class Calendar {
    }
 }
 
-class strTools {
-    
-    public static function gen($car,$long){
+/**
+ * Class strTools
+ */
+class strTools 
+{
+    /**
+     * @param $char
+     * @param $long
+     * @return string
+     */
+    public static function gen($char, $long)
+    {
         $ret = "";
-        for ($i=0;$i<$long;$i++) $ret.=$car;
+        for ($i=0;$i<$long;$i++) {
+            $ret .= $char;
+        }
+        
         return $ret;
     }
-    // mancha una cadena desde $start hasta $long con el caracter $car
-    public static function mancha($str,$car,$start,$long){
+    
+    /**
+     * dirt a string from $start to $start+$long-1 with the $char passed
+     */
+    public static function dirt($str, $char, $start, $long)
+    {
         $tot = strlen($str);
-        $s = strTools::gen($car,$long);
+        $s = self::gen($char,$long);
         $a = substr($str, 0, $start-1);
-        $b = substr($str, start+$long, $tot);
+        $b = substr($str, $start+$long, $tot);
+        
         return $a.$s.$b;
     }
 }
