@@ -1,5 +1,6 @@
 {
     "name": "jlaso/php-tools",
+    "version": "1.1",
     "type": "library",
     "description": "This project holds a collection of useful PHP classes grouped in components to be used in any PHP5.2 project.",
     "keywords": ["jlaso", "php", "toolkit"],
@@ -8,7 +9,7 @@
     "license": "MIT",
     "authors": [
         {
-        "name": "Patrick Joseluis Laso",
+        "name": "Patrick JL Laso",
         "email": "wld1373@gmail.com",
         "homepage": "http://www.patricklaso.com"
         }
