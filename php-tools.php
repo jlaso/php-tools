@@ -6,68 +6,82 @@
    define ("_SERVER_", "http://".$_SERVER['SERVER_NAME'].'/'.basename(_ROOT_)."/");
 
    @define ("__DIR__",dirname(__FILE__));
-   require_once __DIR__.'/../config.php';
+   require_once __DIR__.'/config.php';
 
-class DbTools {    
+
+/**
+ * Class DbTools
+ *
+ * @author jlaso <wld1373@gmail.com>
+ * @revision 17.08.2014
+ */
+class DbTools
+{
+
     /**
+     * Connect with the DB_NAME and returns the object mysql to access
      *
+     * @param string $dbname
      * @return mysqli
-     *
-     * conecta con la base de datos especificada en config.php y devuelve el link
-     * sistema mysqli, más moderno que solo mysql (no es con objetos)
      */
-    public static function conectar($dbname = DB_NAME){
-          try {
-                $conn = new mysqli(DB_HOST, DB_USUARIO, DB_PASSWORD, $dbname);
-          } catch (Exception $e) {
-                die ("Ha fallado el intento de conexión a la base de datos, ".$e->getMessage() );
-          }
-          //$this->conn = $conn;
-          return $conn;
+    public static function connect($dbname = DB_NAME)
+    {
+        try {
+            $conn = new mysqli(DB_HOST, DB_USER, DB_PASSWORD, $dbname);
+        } catch (Exception $e) {
+            die ( "There is an error access to DB: ".$e->getMessage() );
+        }
+
+        return $conn;
     }
 
     /**
+     * offline version 'dont requires db connection' of mysql_real_escape_string
      *
      * @param string $value
      * @return string
-     *
-     * 'equivalente' de mysql_real_escape_string, ya que para utilizar ésta hay que estar
-     * conectado a una BBDD
      */
-    public static function my_real_escape_string($value){
+    public static function my_real_escape_string($value)
+    {
         $search = array("\x00", "\n", "\r", "\\", "'", "\"", "\x1a");
         $replace = array("\\x00", "\\n", "\\r", "\\\\" ,"\'", "\\\"", "\\\x1a");
+
         return str_replace($search, $replace, $value);
     }
 
     /**
+     * filters $data removing malicious code
      *
      * @param string $data
      * @return string
      *
-     * filtra los datos para que estos no tengan código malicioso
      */
-    public static function filtrarDatos($data) {
+    public static function filterData($data)
+    {
         $data = trim(htmlentities(strip_tags($data)));
 
-        if (get_magic_quotes_gpc())
-                $data = stripslashes($data);
-
+        if (get_magic_quotes_gpc()){
+            $data = stripslashes($data);
+        }
         $data = self::my_real_escape_string($data);
 
         return $data;
     }
 
-    public static function showDatabases(){
-
-        $conn = DbTools::conectar();
-
+    /**
+     * returns an array with the databases of the MySQL server, DB_USER needs privileges
+     *
+     * @return array
+     */
+    public static function showDatabases()
+    {
+        $conn = DbTools::connect();
+        $databases = array();
         $sql = "show databases";
 
         try {
             $result = $conn->query($sql);
-            //$st=$result->fetch_assoc();
-            $databases = array();
+
             $num = $result->num_rows;
             if ($num) {
                 for ($i=0; $i<$num; $i++) {
@@ -76,23 +90,29 @@ class DbTools {
                 $result->free();
             }
             $conn->close();
-            return $databases;
         }catch (Exception $e) {
             $conn->close();
-            die("Query ha fallado: ".$e->getMessage());
+            die("Query failed: " . $e->getMessage());
         }
+
+        return $databases;
     }
-    
-    public static function showTables($dbname){
 
-        $conn = DbTools::conectar($dbname);
+    /**
+     * returns an array with the tables of $dbname
+     *
+     * @param string $dbname
+     * @return array
+     */
+    public static function showTables($dbname)
+    {
 
+        $conn = DbTools::connect($dbname);
+        $tables = array();
         $sql = "show tables";
 
         try {
             $result = $conn->query($sql);
-            //$st=$result->fetch_assoc();
-            $tables = array();
             $num = $result->num_rows;
             if ($num) {
                 for ($i=0; $i<$num; $i++) {
@@ -101,22 +121,28 @@ class DbTools {
                 $result->free();
             }
             $conn->close();
-            return $tables;
         }catch (Exception $e) {
             $conn->close();
-            die("Query ha fallado: ".$e->getMessage());
+            die("Query failed: ".$e->getMessage());
         }
-    }
-    
-    public static function describeTable ($dbname,$table) {
-        $conn = DbTools::conectar($dbname);
 
+        return $tables;
+    }
+
+    /**
+     * returns an array with description of each field of $table
+     * @param string $dbname
+     * @param string $table
+     * @return array
+     */
+    public static function describeTable($dbname, $table)
+    {
+        $conn = DbTools::connect($dbname);
+        $fields = array();
         $sql = "describe {$table}";
 
         try {
             $result = $conn->query($sql);
-            //$st=$result->fetch_assoc();
-            $fields = array();
             $num = $result->num_rows;
             if ($num) {
                 for ($i=0; $i<$num; $i++) {
@@ -125,71 +151,112 @@ class DbTools {
                 $result->free();
             }
             $conn->close();
-            return $fields;
         }catch (Exception $e) {
             $conn->close();
-            die("Query ha fallado: ".$e->getMessage());
-        }        
+            die("Query failed: ".$e->getMessage());
+        }
+
+        return $fields;
     }
 
     /**
-     * Devuelve el número de registros de una tabla
+     * returns the number of records of $table
      *
-     * @param <string> $dbname
-     * @param <string> $table
-     * @return <integer>
+     * @param string $dbname
+     * @param string $table
+     * @return int
      */
-    public static function numRegs ($dbname,$table) {
-        $conn = DbTools::conectar($dbname);
-
+    public static function numOfRecords($dbname, $table)
+    {
+        $conn = DbTools::connect($dbname);
+        $num = 0;
         $sql = "select * from {$table}";
 
         try {
             $result = $conn->query($sql);
             $num = $conn->affected_rows;
             $conn->close();
-            return $num;
         }catch (Exception $e) {
             $conn->close();
-            die("Query ha fallado: ".$e->getMessage());
+            die("Query failed: ".$e->getMessage());
         }
+
+        return $num;
     }
-    
-    public static function genFldLstFromDescribeTable($mixed,$tab="\t\t"){
+
+    /**
+     * returns pretty description of field l.ist
+     * @param array $mixed
+     * @param string $tab
+     * @return string
+     */
+    public static function genFldLstFromDescribeTable($mixed, $tab="\t\t")
+    {
         $result = "";
         foreach ($mixed as $elem){
             $field = $elem['Field'];
             $result .= (($result)? ",\n" : "")."{$tab}'{$field}' => null";
         }
+
         return $result;
-    }  
-    
-    public static function genFldLstSinID($mixed,$tab="\t\t"){
+    }
+
+    /**
+     * returns field list without id
+     *
+     * @param array $mixed
+     * @param string $tab
+     * @return string
+     */
+    public static function genFldLstWithoutID($mixed,$tab="\t\t")
+    {
         $result = "";
         $i=1;
         foreach ($mixed as $elem){
             $field = $elem['Field'];
-            if ($i++>1)  
+            if ($i++>1){
                 $result .= (($result)? ",\n" : "")."{$tab}'{$field}' => null";
+            }
         }
-        return $result;    
+
+        return $result;
     }
-    
-    public static function genFldNameLstSinID($mixed,$tab="\t\t"){
+
+    /**
+     * returns field name list without id
+     *
+     * @param array $mixed
+     * @param string $tab
+     * @return string
+     */
+    public static function genFldNameLstWithoutID($mixed, $tab="\t\t")
+    {
         $result = "";
         foreach ($mixed as $elem){
             $field = $elem['Field'];
             $result .= (($result)? ",\n" : $tab).$field;
         }
-        return $result;    
+        return $result;
     }
-    
-    
-    public static function describeForeigns ($dbname,$table) {
-        $sqlCrea = self::sqlCrea($dbname, $table);
 
-        // encuentro mediante expresiones regulares las definiciones de CONSTRAINTS
-        $num = preg_match_all("/CONSTRAINT\s*`(\w+)`\s*FOREIGN\sKEY\s*\(`(\w+)`\)\s*REFERENCES\s`(\w+)`\s*\(`(\w+)`\),?/", $sqlCrea, $matches, PREG_SET_ORDER);
+    /**
+     * returns a foreign list of fields for $table
+     *
+     * @param string $dbname
+     * @param string $table
+     * @return array
+     */
+    public static function describeForeigns($dbname, $table)
+    {
+        $sqlCreation = self::sqlCreation($dbname, $table);
+
+        // find with regex CONSTRAINTS definitions
+        $num = preg_match_all(
+            "/CONSTRAINT\s*`(\w+)`\s*FOREIGN\sKEY\s*\(`(\w+)`\)\s*REFERENCES\s`(\w+)`\s*\(`(\w+)`\),?/",
+            $sqlCreation,
+            $matches,
+            PREG_SET_ORDER
+        );
         $fields = array();
         if ($num) {
             for ($i=0; $i<$num; $i++) {
@@ -198,39 +265,41 @@ class DbTools {
                     'foreignKey'     => $matches[$i][2],
                     'referencesDb'   => $matches[$i][3],
                     'referencesFld'  => $matches[$i][4]
-                    );
+                );
             }
         }
+
         return $fields;
     }
-    
+
     /**
+     * returns the SQL sentence needed to create a table
      *
-     * Devuelve el sql para crear la tabla
-     * 
      * @param string $dbname
      * @param string $table
      * @return string
      */
-    public static function sqlCrea ($dbname, $table) {
-        $conn = DbTools::conectar($dbname);
+    public static function sqlCreation($dbname, $table)
+    {
+        $conn = DbTools::connect($dbname);
         $sql = "show create table {$table}";
- 
+        $sqlCreation = "";
         try {
             $result = $conn->query($sql);
             //$st=$result->fetch_assoc();
             if ($result) {
                 $jj = $result->fetch_array();
-                $sqlCrea = $jj[1];   // esta es la sentencia sql que crea la tabla  
-            }else $sqlCrea="";
+                $sqlCreation = $jj[1];
+            }
             $conn->close();
-            return $sqlCrea;
         }catch (Exception $e) {
             $conn->close();
-            die("Query ha fallado: ".$e->getMessage());
-        }   
+            die("Query failed: ".$e->getMessage());
+        }
+
+        return $sqlCreation;
     }
-    
+
 }
 
 class HtmlTools {
